@@ -1,4 +1,4 @@
-package com.example.MiauCare.enums;
+package com.example.MiauCare.Catalogos.enums;
 
 public enum EstadoVida {
     ACTIVO,

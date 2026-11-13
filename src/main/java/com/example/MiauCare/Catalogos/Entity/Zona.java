@@ -1,4 +1,4 @@
-package com.example.MiauCare.Entity;
+package com.example.MiauCare.Catalogos.Entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
