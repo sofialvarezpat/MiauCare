@@ -1,6 +1,7 @@
 package com.example.MiauCare.HistorialClinico.Service;
 
 import com.example.MiauCare.Administradores.Repository.RondaRepository;
+import com.example.MiauCare.Administradores.enums.EstadoAprobacionGato;
 import com.example.MiauCare.Administradores.enums.EstadoRonda;
 import com.example.MiauCare.Exception.SinPermisosException;
 import com.example.MiauCare.Gatos.Entity.Gato;
@@ -26,10 +27,10 @@ public class CirugiaCesServiceImpl implements CirugiaCesService {
 
     private static final List<EstadoCirugia> ESTADOS_ACTIVOS =
             List.of(EstadoCirugia.PROGRAMADA, EstadoCirugia.EN_CURSO);
+
     private static final List<EstadoRonda> RONDAS_ACTIVAS =
             List.of(EstadoRonda.PROGRAMADA, EstadoRonda.EN_CURSO);
 
-    // Render corre en UTC: usamos la hora de Colombia para "hoy"
     private static final ZoneId ZONA = ZoneId.of("America/Bogota");
 
     private final CirugiaCesRepository cirugiaRepository;
@@ -88,16 +89,18 @@ public class CirugiaCesServiceImpl implements CirugiaCesService {
 
         validarNoFallecido(gato);
 
+        if (gato.getEstadoAprobacion() != null && gato.getEstadoAprobacion() != EstadoAprobacionGato.APROBADO) {
+            throw new IllegalStateException("El registro de este gato aún no ha sido aprobado por un administrador.");
+        }
+
         if (gato.getEstadoVida() != EstadoVidaGato.ACTIVO) {
             throw new IllegalStateException("Solo se puede programar una cirugía CES a gatos con estado de vida Activo.");
         }
 
-        // RN-06: un gato ya esterilizado no se programa de nuevo
         if (Boolean.TRUE.equals(gato.getEsterilizado())) {
             throw new IllegalStateException("Este gato ya está esterilizado, no puede programarse otra cirugía CES (RN-06).");
         }
 
-        // Si el gato ya tiene otro veterinario responsable, este no puede tomarlo
         if (gato.getVeterinarioResponsable() != null
                 && !gato.getVeterinarioResponsable().getId().equals(veterinario.getId())) {
             throw new SinPermisosException(
@@ -111,14 +114,14 @@ public class CirugiaCesServiceImpl implements CirugiaCesService {
         cirugia.setQuirofano(cirugia.getQuirofano().trim());
         validarSinCruces(cirugia, veterinario.getId());
 
-        cirugia.setId(null); // evita que un id enviado en el JSON sobrescriba otra cirugía
+        cirugia.setId(null);
         cirugia.setGato(gato);
         cirugia.setVeterinario(veterinario);
         cirugia.setEstado(EstadoCirugia.PROGRAMADA);
         cirugia.setResultado(null);
+
         CirugiaCes guardada = cirugiaRepository.save(cirugia);
 
-        // RN-02: programar una CES es uno de los dos eventos que vinculan veterinario y gato
         if (gato.getVeterinarioResponsable() == null) {
             gato.setVeterinarioResponsable(veterinario);
             gatoRepository.save(gato);
@@ -138,11 +141,11 @@ public class CirugiaCesServiceImpl implements CirugiaCesService {
         if (cirugia.getEstado() != EstadoCirugia.PROGRAMADA) {
             throw new IllegalStateException("Solo se puede iniciar una cirugía programada.");
         }
+
         if (Boolean.TRUE.equals(gato.getEsterilizado())) {
             throw new IllegalStateException("Este gato ya está esterilizado, no puede realizarse otra cirugía CES (RN-06).");
         }
 
-        // RF-12: el gato queda internado durante la cirugía
         gato.setEstadoInternacion(EstadoInternacion.HOSPITALIZADO);
         gatoRepository.save(gato);
 
@@ -161,16 +164,15 @@ public class CirugiaCesServiceImpl implements CirugiaCesService {
         if (cirugia.getEstado() != EstadoCirugia.EN_CURSO) {
             throw new IllegalStateException("Solo se puede completar una cirugía que está en curso.");
         }
+
         if (resultado == null || resultado.isBlank()) {
             throw new IllegalArgumentException("Debes registrar el resultado de la cirugía.");
         }
 
-        // El gato queda esterilizado; alta (vuelve a la colonia) o sigue hospitalizado
         gato.setEsterilizado(true);
         gato.setEstadoInternacion(darDeAlta ? EstadoInternacion.EN_CALLE : EstadoInternacion.HOSPITALIZADO);
         gatoRepository.save(gato);
 
-        // Queda registrado en la línea de tiempo del historial clínico
         HistorialClinico entrada = new HistorialClinico();
         entrada.setGato(gato);
         entrada.setTipo(TipoHistorial.PROCEDIMIENTO);
@@ -194,7 +196,6 @@ public class CirugiaCesServiceImpl implements CirugiaCesService {
             throw new IllegalStateException("Solo se pueden cancelar cirugías programadas.");
         }
 
-        // Cancelar sí se permite aunque el gato haya fallecido: libera el horario y el quirófano
         cirugia.setEstado(EstadoCirugia.CANCELADA);
         return cirugiaRepository.save(cirugia);
     }

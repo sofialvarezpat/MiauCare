@@ -27,6 +27,18 @@ public class Voluntario {
     @Column(nullable = false, unique = true)
     private String correo;
 
+    // RF-01: Teléfono de contacto del voluntario
+    private String telefono;
+
+    // RF-01: Disponibilidad horaria del voluntario (ej: "Mañanas", "Fines de semana")
+    private String disponibilidad;
+
+    // RF-01 y RF-02: Coordenada GPS latitud base del voluntario
+    private Double latitudBase;
+
+    // RF-01 y RF-02: Coordenada GPS longitud base del voluntario
+    private Double longitudBase;
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String contrasena;
@@ -35,6 +47,7 @@ public class Voluntario {
     @Column(nullable = false)
     private EstadoVoluntario estado;
 
+    // Colonia/zona asignada automáticamente por GPS o elegida manualmente (RN-07)
     @ManyToOne
     @JoinColumn(name = "zona_id")
     private Zona zona;

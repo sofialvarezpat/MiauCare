@@ -32,7 +32,6 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
                         // Público: login y registro/solicitud iniciales
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/voluntarios/registro").permitAll()
@@ -46,6 +45,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/zonas/**", "/api/diagnosticos/**", "/api/especialidades/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/zonas/**", "/api/diagnosticos/**", "/api/especialidades/**").hasRole("ADMINISTRADOR")
 
+                        // Gatos: aprobación de registros y reasignación de pacientes (solo Administrador, va ANTES de las reglas generales)
+                        .requestMatchers(HttpMethod.GET, "/api/gatos/pendientes").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/gatos/*/aprobar", "/api/gatos/*/rechazar").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/gatos/*/reasignar-veterinario").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/gatos/reasignar-masivo").hasRole("ADMINISTRADOR")
+
                         // Gatos: lectura autenticada; escritura solo Vet/Admin
                         .requestMatchers(HttpMethod.GET, "/api/gatos/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/gatos/**").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
@@ -57,13 +62,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/historial-clinico/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/historial-clinico/**").hasRole("VETERINARIO")
 
-                        // Administración de usuarios: solo Administrador
+                        // Administración de usuarios e indicadores: solo Administrador
                         .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/indicadores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/pendientes").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/aprobar").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/rechazar").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/estado").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/voluntarios/*/estado").hasRole("ADMINISTRADOR")
+
+                        // Disponibilidad de emergencias y actualización de perfil de veterinario: solo Veterinario o Admin
+                        .requestMatchers(HttpMethod.PATCH, "/api/veterinarios/*/disponibilidad").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/veterinarios/*").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
 
                         // Avistamientos: solo Voluntario registra
                         .requestMatchers(HttpMethod.POST, "/api/avistamientos/**").hasRole("VOLUNTARIO")

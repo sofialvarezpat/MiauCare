@@ -2,6 +2,7 @@ package com.example.MiauCare.Catalogos.Controller;
 
 import com.example.MiauCare.Catalogos.Entity.Zona;
 import com.example.MiauCare.Catalogos.Service.ZonaService;
+import com.example.MiauCare.DTO.ZonaResumenDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,19 @@ public class ZonaController {
     @GetMapping
     public List<Zona> listar() {
         return zonaService.listarTodas();
+    }
+
+    @GetMapping("/resumen")
+    public List<ZonaResumenDto> listarConConteoGatos() {
+        return zonaService.listarConConteoGatos();
+    }
+
+    @GetMapping("/ruta")
+    public List<ZonaResumenDto> obtenerRuta(
+            @RequestParam(required = false) Double latitud,
+            @RequestParam(required = false) Double longitud,
+            @RequestParam(required = false) String zonaMacro) {
+        return zonaService.obtenerRutaAlimentacion(latitud, longitud, zonaMacro);
     }
 
     @GetMapping("/{id}")

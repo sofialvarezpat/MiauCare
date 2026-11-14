@@ -1,5 +1,6 @@
 package com.example.MiauCare.Gatos.Entity;
 
+import com.example.MiauCare.Administradores.enums.EstadoAprobacionGato;
 import com.example.MiauCare.Catalogos.Entity.Zona;
 import com.example.MiauCare.Gatos.enums.EstadoInternacion;
 import com.example.MiauCare.Gatos.enums.EstadoVidaGato;
@@ -49,6 +50,9 @@ public class Gato {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoInternacion estadoInternacion;
+
+    @Enumerated(EnumType.STRING)
+    private EstadoAprobacionGato estadoAprobacion = EstadoAprobacionGato.APROBADO;
 
     private String fotoUrl;
 
