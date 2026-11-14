@@ -64,6 +64,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/veterinarios/*/estado").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/voluntarios/*/estado").hasRole("ADMINISTRADOR")
 
+                                // Avistamientos: solo Voluntario registra
+                                .requestMatchers(HttpMethod.POST, "/api/avistamientos/**").hasRole("VOLUNTARIO")
+                                .requestMatchers(HttpMethod.GET, "/api/avistamientos/**").authenticated()
+
+// Solicitudes de gato: Voluntario crea, Admin aprueba/rechaza
+                                .requestMatchers(HttpMethod.POST, "/api/solicitudes-gato").hasRole("VOLUNTARIO")
+                                .requestMatchers("/api/solicitudes-gato/pendientes").hasRole("ADMINISTRADOR")
+                                .requestMatchers("/api/solicitudes-gato/*/aceptar").hasRole("ADMINISTRADOR")
+                                .requestMatchers("/api/solicitudes-gato/*/rechazar").hasRole("ADMINISTRADOR")
                         // Cualquier otra ruta: solo necesita estar autenticado
                         .anyRequest().authenticated()
                 )
