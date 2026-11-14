@@ -3,6 +3,7 @@ package com.example.MiauCare.Voluntarios.Entity;
 import com.example.MiauCare.Catalogos.Entity.Zona;
 import com.example.MiauCare.Voluntarios.enums.EstadoVoluntario;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,7 @@ public class Voluntario {
     @Column(nullable = false, unique = true)
     private String correo;
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String contrasena;
 

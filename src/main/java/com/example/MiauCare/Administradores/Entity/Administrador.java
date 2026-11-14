@@ -2,6 +2,7 @@ package com.example.MiauCare.Administradores.Entity;
 
 import com.example.MiauCare.Administradores.enums.EstadoAdministrador;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +23,7 @@ public class Administrador {
     @Column(nullable = false, unique = true)
     private String correo;
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String contrasena;
 
