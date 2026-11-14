@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
                         // Público: login y registro/solicitud iniciales
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/voluntarios/registro").permitAll()
@@ -64,15 +65,29 @@ public class SecurityConfig {
                         .requestMatchers("/api/veterinarios/*/estado").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/voluntarios/*/estado").hasRole("ADMINISTRADOR")
 
-                                // Avistamientos: solo Voluntario registra
-                                .requestMatchers(HttpMethod.POST, "/api/avistamientos/**").hasRole("VOLUNTARIO")
-                                .requestMatchers(HttpMethod.GET, "/api/avistamientos/**").authenticated()
+                        // Avistamientos: solo Voluntario registra
+                        .requestMatchers(HttpMethod.POST, "/api/avistamientos/**").hasRole("VOLUNTARIO")
+                        .requestMatchers(HttpMethod.GET, "/api/avistamientos/**").authenticated()
 
-// Solicitudes de gato: Voluntario crea, Admin aprueba/rechaza
-                                .requestMatchers(HttpMethod.POST, "/api/solicitudes-gato").hasRole("VOLUNTARIO")
-                                .requestMatchers("/api/solicitudes-gato/pendientes").hasRole("ADMINISTRADOR")
-                                .requestMatchers("/api/solicitudes-gato/*/aceptar").hasRole("ADMINISTRADOR")
-                                .requestMatchers("/api/solicitudes-gato/*/rechazar").hasRole("ADMINISTRADOR")
+                        // Solicitudes de gato: Voluntario crea, Admin aprueba/rechaza
+                        .requestMatchers(HttpMethod.POST, "/api/solicitudes-gato").hasRole("VOLUNTARIO")
+                        .requestMatchers("/api/solicitudes-gato/pendientes").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/solicitudes-gato/*/aceptar").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/solicitudes-gato/*/rechazar").hasRole("ADMINISTRADOR")
+
+                        // Alertas médicas: solo Veterinario gestiona
+                        .requestMatchers("/api/alertas-medicas/**").hasRole("VETERINARIO")
+
+                        // Rondas (el orden importa: Spring aplica la primera regla que coincide)
+                        .requestMatchers(HttpMethod.GET, "/api/rondas/**").hasAnyRole("ADMINISTRADOR", "VETERINARIO", "VOLUNTARIO")
+                        .requestMatchers(HttpMethod.PATCH, "/api/rondas/*/asistir").hasRole("VOLUNTARIO")
+                        .requestMatchers(HttpMethod.PATCH, "/api/rondas/*/iniciar", "/api/rondas/*/finalizar").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
+                        .requestMatchers("/api/rondas/**").hasRole("ADMINISTRADOR")
+
+                        // Cirugías CES: lectura Veterinario y Admin; programar, iniciar, completar y cancelar solo Veterinario
+                        .requestMatchers(HttpMethod.GET, "/api/cirugias-ces/**").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
+                        .requestMatchers("/api/cirugias-ces/**").hasRole("VETERINARIO")
+
                         // Cualquier otra ruta: solo necesita estar autenticado
                         .anyRequest().authenticated()
                 )
@@ -80,6 +95,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-    }
-
-
+}

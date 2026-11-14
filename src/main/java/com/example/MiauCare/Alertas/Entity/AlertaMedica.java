@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "alertas_medicas")
@@ -24,7 +26,13 @@ public class AlertaMedica {
     private Gato gato;
 
     @Column(nullable = false)
-    private String motivo; // Ej: "Reportes críticos consecutivos" o "Ausencia prolongada"
+    private String motivo;
+
+    @Column(nullable = false)
+    private String zonaDescripcion; // texto libre, ej: "Colonia Centro" (para mostrar "Reportó Ana, Colonia Centro")
+
+    @Column(nullable = false)
+    private String reportadoPor; // nombre del voluntario que generó el avistamiento origen
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -32,12 +40,22 @@ public class AlertaMedica {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_responsable_id")
-    private Veterinario veterinarioResponsable; // null hasta que alguien la acepte
+    private Veterinario veterinarioResponsable;
+
+    @ManyToMany
+    @JoinTable(
+            name = "alerta_delegados",
+            joinColumns = @JoinColumn(name = "alerta_id"),
+            inverseJoinColumns = @JoinColumn(name = "veterinario_id")
+    )
+    private List<Veterinario> delegados = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDateTime fechaCreacion;
 
     private LocalDateTime fechaCierre;
+
+    private String resolucion; // Ej: "Resuelto", "Derivado", "Requiere seguimiento"
 
     @Column(columnDefinition = "TEXT")
     private String observacionCierre;
