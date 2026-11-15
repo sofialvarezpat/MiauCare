@@ -30,4 +30,12 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    // Pantalla "Restablecer contraseña" (pública)
+    // Body esperado: { "correo": "usuario@mail.com", "nuevaContrasena": "NuevaPassword123" }
+    @PostMapping("/restablecer-contrasena")
+    public ResponseEntity<Void> restablecerContrasena(@RequestBody RestablecerContrasenaRequest request) {
+        authService.restablecerContrasena(request);
+        return ResponseEntity.noContent().build();
+    }
 }

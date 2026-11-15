@@ -32,10 +32,11 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Público: login y registro/solicitud iniciales
+                        // Público: login, registro/solicitud iniciales y subida de foto
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/voluntarios/registro").permitAll()
                         .requestMatchers("/api/veterinarios/solicitud").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/archivos/subir").permitAll()
 
                         // Catálogos: lectura libre
                         .requestMatchers(HttpMethod.GET, "/api/zonas/**", "/api/diagnosticos/**", "/api/especialidades/**").permitAll()
@@ -45,7 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/zonas/**", "/api/diagnosticos/**", "/api/especialidades/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/zonas/**", "/api/diagnosticos/**", "/api/especialidades/**").hasRole("ADMINISTRADOR")
 
-                        // Gatos: aprobación de registros y reasignación de pacientes (solo Administrador, va ANTES de las reglas generales)
+                        // Gatos: aprobación de registros y reasignación de pacientes (solo Administrador)
                         .requestMatchers(HttpMethod.GET, "/api/gatos/pendientes").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/gatos/*/aprobar", "/api/gatos/*/rechazar").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/gatos/*/reasignar-veterinario").hasRole("ADMINISTRADOR")
@@ -62,20 +63,24 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/historial-clinico/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/historial-clinico/**").hasRole("VETERINARIO")
 
-                        // Administración de usuarios e indicadores: solo Administrador
+                        // Administración de usuarios, indicadores, parámetros, auditoría y resumen del dashboard: solo Administrador / Vet
                         .requestMatchers("/api/administradores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/indicadores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/parametros/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/auditoria/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/dashboard/resumen").hasAnyRole("ADMINISTRADOR", "VETERINARIO")
                         .requestMatchers("/api/veterinarios/pendientes").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/aprobar").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/rechazar").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/estado").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/voluntarios/*/estado").hasRole("ADMINISTRADOR")
 
-                        // Disponibilidad de emergencias y actualización de perfil de veterinario: solo Veterinario o Admin
+                        // Disponibilidad de emergencias y actualización de perfil de veterinario
                         .requestMatchers(HttpMethod.PATCH, "/api/veterinarios/*/disponibilidad").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/veterinarios/*").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
 
-                        // Avistamientos: solo Voluntario registra
+                        // Avistamientos y Alertas por zona: Voluntario y Admin consultan; Voluntario registra
+                        .requestMatchers(HttpMethod.GET, "/api/alertas-medicas/zona/**").hasAnyRole("VOLUNTARIO", "ADMINISTRADOR", "VETERINARIO")
                         .requestMatchers(HttpMethod.POST, "/api/avistamientos/**").hasRole("VOLUNTARIO")
                         .requestMatchers(HttpMethod.GET, "/api/avistamientos/**").authenticated()
 
@@ -85,20 +90,24 @@ public class SecurityConfig {
                         .requestMatchers("/api/solicitudes-gato/*/aceptar").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/solicitudes-gato/*/rechazar").hasRole("ADMINISTRADOR")
 
-                        // Alertas médicas: solo Veterinario gestiona
+                        // Alertas médicas: gestión exclusiva de Veterinarios
                         .requestMatchers("/api/alertas-medicas/**").hasRole("VETERINARIO")
 
-                        // Rondas (el orden importa: Spring aplica la primera regla que coincide)
+                        // Rondas
                         .requestMatchers(HttpMethod.GET, "/api/rondas/**").hasAnyRole("ADMINISTRADOR", "VETERINARIO", "VOLUNTARIO")
                         .requestMatchers(HttpMethod.PATCH, "/api/rondas/*/asistir").hasRole("VOLUNTARIO")
                         .requestMatchers(HttpMethod.PATCH, "/api/rondas/*/iniciar", "/api/rondas/*/finalizar").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
                         .requestMatchers("/api/rondas/**").hasRole("ADMINISTRADOR")
 
-                        // Cirugías CES: lectura Veterinario y Admin; programar, iniciar, completar y cancelar solo Veterinario
+                        // Cirugías CES
                         .requestMatchers(HttpMethod.GET, "/api/cirugias-ces/**").hasAnyRole("VETERINARIO", "ADMINISTRADOR")
                         .requestMatchers("/api/cirugias-ces/**").hasRole("VETERINARIO")
 
-                        // Cualquier otra ruta: solo necesita estar autenticado
+                        // Notificaciones globales
+                        .requestMatchers(HttpMethod.GET, "/api/notificaciones/mias").authenticated()
+                        .requestMatchers("/api/notificaciones/**").hasRole("ADMINISTRADOR")
+
+                        // Cualquier otra ruta: solo autenticado
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -11,4 +11,5 @@ public interface AlertaMedicaService {
     AlertaMedica delegar(Long alertaId, Long veterinarioQueDelega, Long veterinarioDestino);
     AlertaMedica pasarAEnAtencion(Long alertaId, Long veterinarioId);
     AlertaMedica cerrar(Long alertaId, Long veterinarioId, String resolucion, String observacion);
+    List<AlertaMedica> listarPorZona(Long zonaId);
 }

@@ -153,4 +153,12 @@ public class AlertaMedicaServiceImpl implements AlertaMedicaService {
         return veterinarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Veterinario no encontrado con id: " + id));
     }
+    @Override
+    public List<AlertaMedica> listarPorZona(Long zonaId) {
+        return alertaRepository.findAll().stream()
+                .filter(a -> a.getGato() != null
+                        && a.getGato().getZona() != null
+                        && a.getGato().getZona().getId().equals(zonaId))
+                .toList();
+    }
 }

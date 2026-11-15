@@ -30,11 +30,15 @@ public class Gato {
     @Column(nullable = false)
     private SexoGato sexo;
 
-    private String edadEstimada; // Ej: "3 años", "2 meses" (texto libre como en los mockups)
+    private String edadEstimada; // Ej: "3 años", "2 meses"
 
     private String raza;
 
     private Double peso;
+
+    // RF-05: Condiciones médicas especiales o alergias fijas (ej: "Alerta: reacción a penicilina")
+    @Column(columnDefinition = "TEXT")
+    private String condicionesEspeciales;
 
     @ManyToOne
     @JoinColumn(name = "zona_id")

@@ -18,37 +18,52 @@ public class AlertaMedicaController {
         this.alertaService = alertaService;
     }
 
+    // Carrusel de urgencias (para Veterinario)
     @GetMapping("/nuevas")
     public List<AlertaMedica> listarNuevas() {
         return alertaService.listarNuevas();
     }
 
+    // NUEVO: Lista las alertas filtradas por zona (para la pantalla "Alertas de mi Zona" del Voluntario)
+    @GetMapping("/zona/{zonaId}")
+    public List<AlertaMedica> listarPorZona(@PathVariable Long zonaId) {
+        return alertaService.listarPorZona(zonaId);
+    }
+
+    // Lista pacientes a cargo / alertas del veterinario
     @GetMapping("/veterinario/{veterinarioId}")
     public List<AlertaMedica> listarPorVeterinario(@PathVariable Long veterinarioId,
                                                    @RequestParam(required = false) String estado) {
         return alertaService.listarPorVeterinario(veterinarioId, estado);
     }
 
+    // Aceptar caso / pasar a en atención
     @PatchMapping("/{id}/aceptar")
-    public ResponseEntity<AlertaMedica> aceptar(@PathVariable Long id, @RequestParam Long veterinarioId) {
-        return ResponseEntity.ok(alertaService.aceptarCaso(id, veterinarioId));
-    }
-
-    @PatchMapping("/{id}/delegar")
-    public ResponseEntity<AlertaMedica> delegar(@PathVariable Long id,
-                                                @RequestParam Long veterinarioQueDelega,
-                                                @RequestParam Long veterinarioDestino) {
-        return ResponseEntity.ok(alertaService.delegar(id, veterinarioQueDelega, veterinarioDestino));
+    public ResponseEntity<AlertaMedica> aceptarCaso(@PathVariable Long id,
+                                                    @RequestBody Map<String, Long> body) {
+        return ResponseEntity.ok(alertaService.aceptarCaso(id, body.get("veterinarioId")));
     }
 
     @PatchMapping("/{id}/en-atencion")
-    public ResponseEntity<AlertaMedica> pasarAEnAtencion(@PathVariable Long id, @RequestParam Long veterinarioId) {
-        return ResponseEntity.ok(alertaService.pasarAEnAtencion(id, veterinarioId));
+    public ResponseEntity<AlertaMedica> pasarAEnAtencion(@PathVariable Long id,
+                                                         @RequestBody Map<String, Long> body) {
+        return ResponseEntity.ok(alertaService.pasarAEnAtencion(id, body.get("veterinarioId")));
     }
 
+    // Delegar a colega del directorio
+    @PatchMapping("/{id}/delegar")
+    public ResponseEntity<AlertaMedica> delegar(@PathVariable Long id,
+                                                @RequestBody Map<String, Long> body) {
+        return ResponseEntity.ok(alertaService.delegar(id, body.get("veterinarioId"), body.get("destinoId")));
+    }
+
+    // Cerrar alerta con resolución y observaciones (RN-22, RN-23)
     @PatchMapping("/{id}/cerrar")
-    public ResponseEntity<AlertaMedica> cerrar(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        Long veterinarioId = Long.valueOf(body.get("veterinarioId"));
-        return ResponseEntity.ok(alertaService.cerrar(id, veterinarioId, body.get("resolucion"), body.get("observacion")));
+    public ResponseEntity<AlertaMedica> cerrar(@PathVariable Long id,
+                                               @RequestBody Map<String, Object> body) {
+        Long vetId = Long.valueOf(body.get("veterinarioId").toString());
+        String resolucion = (String) body.get("resolucion");
+        String observacion = (String) body.get("observacion");
+        return ResponseEntity.ok(alertaService.cerrar(id, vetId, resolucion, observacion));
     }
 }

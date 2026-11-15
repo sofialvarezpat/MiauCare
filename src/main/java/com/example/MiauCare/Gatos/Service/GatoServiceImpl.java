@@ -23,33 +23,28 @@ public class GatoServiceImpl implements GatoService {
         this.veterinarioRepository = veterinarioRepository;
     }
 
-    // Devuelve solo los gatos aprobados para el censo general
     @Override
     public List<Gato> listarTodos() {
         return gatoRepository.findByEstadoAprobacion(EstadoAprobacionGato.APROBADO);
     }
 
-    // Devuelve los gatos registrados por veterinarios que esperan aprobación del admin
     @Override
     public List<Gato> listarPendientes() {
         return gatoRepository.findByEstadoAprobacion(EstadoAprobacionGato.PENDIENTE);
     }
 
-    // Busca por nombre dentro de los gatos aprobados
     @Override
     public List<Gato> buscarPorNombre(String nombre) {
         return gatoRepository.findByNombreContainingIgnoreCaseAndEstadoAprobacion(
                 nombre, EstadoAprobacionGato.APROBADO);
     }
 
-    // Filtra por zona dentro de los gatos aprobados
     @Override
     public List<Gato> listarPorZona(Long zonaId) {
         return gatoRepository.findByZonaIdAndEstadoAprobacion(
                 zonaId, EstadoAprobacionGato.APROBADO);
     }
 
-    // NUEVO: Devuelve la lista de pacientes a cargo de un veterinario ("Tus pacientes" / "Directorio médico")
     @Override
     public List<Gato> listarPorVeterinario(Long veterinarioId) {
         return gatoRepository.findByVeterinarioResponsableId(veterinarioId);
@@ -67,7 +62,6 @@ public class GatoServiceImpl implements GatoService {
                 .orElseThrow(() -> new RuntimeException("Gato no encontrado con código: " + codigo));
     }
 
-    // Crea el gato sin veterinario responsable inicial (RN-02) y define si entra APROBADO o PENDIENTE
     @Override
     public Gato crear(Gato gato, boolean esAdministrador) {
         gato.setId(null);
@@ -80,7 +74,6 @@ public class GatoServiceImpl implements GatoService {
         return gatoRepository.save(gato);
     }
 
-    // Cambia el estado de aprobación de PENDIENTE a APROBADO
     @Override
     public Gato aprobar(Long id) {
         Gato existente = obtenerPorId(id);
@@ -91,7 +84,6 @@ public class GatoServiceImpl implements GatoService {
         return gatoRepository.save(existente);
     }
 
-    // Cambia el estado de aprobación de PENDIENTE a RECHAZADO
     @Override
     public Gato rechazar(Long id) {
         Gato existente = obtenerPorId(id);
@@ -102,7 +94,7 @@ public class GatoServiceImpl implements GatoService {
         return gatoRepository.save(existente);
     }
 
-    // Actualiza datos generales del gato, validando primero que no esté fallecido
+    // Actualiza datos maestros del gato incluyendo condicionesEspeciales (RF-05)
     @Override
     public Gato actualizar(Long id, Gato datosNuevos) {
         Gato existente = obtenerPorId(id);
@@ -112,13 +104,13 @@ public class GatoServiceImpl implements GatoService {
         existente.setEdadEstimada(datosNuevos.getEdadEstimada());
         existente.setRaza(datosNuevos.getRaza());
         existente.setPeso(datosNuevos.getPeso());
+        existente.setCondicionesEspeciales(datosNuevos.getCondicionesEspeciales());
         existente.setZona(datosNuevos.getZona());
         existente.setEstadoInternacion(datosNuevos.getEstadoInternacion());
         existente.setFotoUrl(datosNuevos.getFotoUrl());
         return gatoRepository.save(existente);
     }
 
-    // Cambia el estado de vida (sin bloqueo de fallecido para permitir revertir errores)
     @Override
     public Gato cambiarEstadoVida(Long id, EstadoVidaGato nuevoEstado) {
         Gato existente = obtenerPorId(id);
@@ -126,7 +118,6 @@ public class GatoServiceImpl implements GatoService {
         return gatoRepository.save(existente);
     }
 
-    // Marca al gato como esterilizado (RN-06)
     @Override
     public Gato marcarEsterilizado(Long id) {
         Gato existente = obtenerPorId(id);
@@ -135,7 +126,6 @@ public class GatoServiceImpl implements GatoService {
         return gatoRepository.save(existente);
     }
 
-    // Asigna o reasigna un veterinario activo a un gato individual (usado por Admin en "Directorio médico")
     @Override
     public Gato asignarVeterinarioResponsable(Long gatoId, Long veterinarioId) {
         Gato gato = obtenerPorId(gatoId);
@@ -145,7 +135,6 @@ public class GatoServiceImpl implements GatoService {
         return gatoRepository.save(gato);
     }
 
-    // NUEVO: Mueve todos los gatos de un veterinario origen a un veterinario destino (modal "Reasignar pacientes")
     @Override
     public List<Gato> reasignarPacientesDeVeterinario(Long veterinarioOrigenId, Long veterinarioDestinoId) {
         if (veterinarioOrigenId.equals(veterinarioDestinoId)) {
@@ -167,14 +156,12 @@ public class GatoServiceImpl implements GatoService {
         gatoRepository.deleteById(id);
     }
 
-    // Bloquea cualquier modificación si el gato está marcado como fallecido
     private void validarNoFallecido(Gato gato) {
         if (gato.getEstadoVida() == EstadoVidaGato.FALLECIDO) {
             throw new IllegalStateException("No se pueden realizar acciones sobre un gato marcado como fallecido.");
         }
     }
 
-    // Verifica que el veterinario exista y tenga estado ACTIVO antes de asignarle pacientes
     private Veterinario obtenerVeterinarioActivo(Long veterinarioId) {
         Veterinario veterinario = veterinarioRepository.findById(veterinarioId)
                 .orElseThrow(() -> new RuntimeException("Veterinario no encontrado con id: " + veterinarioId));

@@ -34,13 +34,19 @@ public class HistorialClinico {
     private DiagnosticoCatalogo diagnostico;
 
     @Enumerated(EnumType.STRING)
-    private NivelGravedad nivelGravedad; // null si tipo = PROCEDIMIENTO sin gravedad asociada
+    private NivelGravedad nivelGravedad;
 
     @Column(nullable = false)
     private String descripcion;
 
     @Column(columnDefinition = "TEXT")
-    private String notas; // Notas de la atención, puede ser más largo
+    private String notas;
+
+    // Peso tomado durante la consulta clínica (ej: 3.8 kg en el mockup de Manchas)
+    private Double pesoRegistrado;
+
+    // Resolución del caso en "Registrar atención": true = Dejar hospitalizado, false = Dar de alta (En calle)
+    private Boolean dejarHospitalizado;
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id", nullable = false)
