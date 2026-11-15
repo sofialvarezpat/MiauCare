@@ -74,6 +74,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/veterinarios/*/rechazar").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/veterinarios/*/estado").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/voluntarios/*/estado").hasRole("ADMINISTRADOR")
+                        // Listado completo de voluntarios (correo, cédula, teléfono): solo Administrador
+                        .requestMatchers(HttpMethod.GET, "/api/voluntarios").hasRole("ADMINISTRADOR")
 
                         // Disponibilidad de emergencias y actualización de perfil de veterinario
                         .requestMatchers(HttpMethod.PATCH, "/api/veterinarios/*/disponibilidad").hasAnyRole("VETERINARIO", "ADMINISTRADOR")

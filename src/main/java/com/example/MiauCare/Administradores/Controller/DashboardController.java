@@ -8,11 +8,9 @@ import com.example.MiauCare.Gatos.enums.EstadoInternacion;
 import com.example.MiauCare.Veterinarios.Repository.VeterinarioRepository;
 import com.example.MiauCare.Veterinarios.enums.EstadoVeterinario;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/dashboard")
 public class DashboardController {
 
     private final GatoRepository gatoRepository;
@@ -28,7 +26,8 @@ public class DashboardController {
     }
 
     // GET /api/dashboard/resumen -> Devuelve las métricas en tiempo real para las tarjetas de inicio del Admin y Veterinario
-    @GetMapping("/resumen")
+    // También disponible como GET /api/indicadores/resumen (solo Administrador, por SecurityConfig)
+    @GetMapping({"/api/dashboard/resumen", "/api/indicadores/resumen"})
     public DashboardResumenDto obtenerResumen() {
         long urgencias = alertaRepository.findAll().stream()
                 .filter(a -> a.getEstado().name().equals("NUEVA"))

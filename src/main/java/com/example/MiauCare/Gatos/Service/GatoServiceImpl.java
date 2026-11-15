@@ -114,6 +114,7 @@ public class GatoServiceImpl implements GatoService {
     @Override
     public Gato cambiarEstadoVida(Long id, EstadoVidaGato nuevoEstado) {
         Gato existente = obtenerPorId(id);
+        validarNoFallecido(existente); // un gato fallecido no puede volver a ACTIVO ni cambiar de estado
         existente.setEstadoVida(nuevoEstado);
         return gatoRepository.save(existente);
     }

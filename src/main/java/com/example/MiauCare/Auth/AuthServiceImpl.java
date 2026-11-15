@@ -3,6 +3,7 @@ package com.example.MiauCare.Auth;
 import com.example.MiauCare.Administradores.Entity.Administrador;
 import com.example.MiauCare.Administradores.Repository.AdministradorRepository;
 import com.example.MiauCare.Exception.CredencialesInvalidasException;
+import com.example.MiauCare.Exception.SinPermisosException;
 import com.example.MiauCare.Veterinarios.Entity.Veterinario;
 import com.example.MiauCare.Veterinarios.Repository.VeterinarioRepository;
 import com.example.MiauCare.Veterinarios.enums.EstadoVeterinario;
@@ -47,13 +48,13 @@ public class AuthServiceImpl implements AuthService {
         if (vet.isPresent() && passwordEncoder.matches(request.getContrasena(), vet.get().getContrasena())) {
             Veterinario v = vet.get();
             if (v.getEstado() == EstadoVeterinario.PENDIENTE) {
-                throw new IllegalStateException("Tu solicitud aún está pendiente de aprobación.");
+                throw new SinPermisosException("Tu solicitud aún está pendiente de aprobación.");
             }
             if (v.getEstado() == EstadoVeterinario.RECHAZADO) {
-                throw new IllegalStateException("Tu solicitud fue rechazada.");
+                throw new SinPermisosException("Tu solicitud fue rechazada.");
             }
             if (v.getEstado() == EstadoVeterinario.INACTIVO) {
-                throw new IllegalStateException("Tu cuenta está inactiva.");
+                throw new SinPermisosException("Tu cuenta está inactiva.");
             }
             String token = jwtUtil.generarToken(v.getId(), v.getCorreo(), "VETERINARIO");
             return new LoginResponse(token, v.getId(), v.getNombreCompleto(), "VETERINARIO", false);
