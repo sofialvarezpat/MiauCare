@@ -32,6 +32,13 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Permitir acceso libre a Swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
                         // Público: login, registro/solicitud iniciales y subida de foto
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/voluntarios/registro").permitAll()
